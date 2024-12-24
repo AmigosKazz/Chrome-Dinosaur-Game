@@ -65,26 +65,32 @@ public class ChromeDinosaur extends JPanel implements ActionListener, KeyListene
         setFocusable(true);
         addKeyListener(this);
 
-        dinosaurImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/dino-run.gif"))).getImage();
-        dinosaurDeadImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/dino-dead.png"))).getImage();
-        dinosaurJumpImg = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/dino-jump.png"))).getImage();
-        cactus1Img = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/cactus1.png"))).getImage();
-        cactus2Img = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/cactus2.png"))).getImage();
-        cactus3Img = new ImageIcon(Objects.requireNonNull(getClass().getResource("./image/cactus3.png"))).getImage();
+        loadImages();
+        initializeGameObjects();
 
-        dinosaur = new Block(dinosaurX, dinosaurY, dinosaurWidth, dinosaurHeight, dinosaurImg);
-        cactusArray = new ArrayList<Block>();
-
-        gameLoop = new Timer(1000/60, this); //1000/60 = 60 frames per 1000ms (1s), update
+        gameLoop = new Timer(1000 / 60, this);
         gameLoop.start();
 
-        placeCactusTimer = new Timer(1500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                placeCactus();
-            }
-        });
+        placeCactusTimer = new Timer(1500, e -> placeCactus());
         placeCactusTimer.start();
+    }
+
+    private void loadImages() {
+        dinosaurImg = loadImage("./image/dino-run.gif");
+        dinosaurDeadImg = loadImage("./image/dino-dead.png");
+        dinosaurJumpImg = loadImage("./image/dino-jump.png");
+        cactus1Img = loadImage("./image/cactus1.png");
+        cactus2Img = loadImage("./image/cactus2.png");
+        cactus3Img = loadImage("./image/cactus3.png");
+    }
+
+    private Image loadImage(String path) {
+        return new ImageIcon(Objects.requireNonNull(getClass().getResource(path))).getImage();
+    }
+
+    private void initializeGameObjects() {
+        dinosaur = new Block(dinosaurX, dinosaurY, dinosaurWidth, dinosaurHeight, dinosaurImg);
+        cactusArray = new ArrayList<>();
     }
 
     void placeCactus() {
@@ -119,33 +125,26 @@ public class ChromeDinosaur extends JPanel implements ActionListener, KeyListene
     public void draw(Graphics g) {
         g.drawImage(dinosaur.img, dinosaur.x, dinosaur.y, dinosaur.width, dinosaur.height, null);
 
-        for (int i = 0; i < cactusArray.size(); i++) {
-            Block cactus = cactusArray.get(i);
+        for (Block cactus : cactusArray) {
             g.drawImage(cactus.img, cactus.x, cactus.y, cactus.width, cactus.height, null);
         }
 
         g.setColor(Color.black);
         g.setFont(new Font("Courier", Font.PLAIN, 32));
-        if (gameOver) {
-            g.drawString("Game Over: " + String.valueOf(score), 10, 35);
-        }
-        else {
-            g.drawString(String.valueOf(score), 10, 35);
-        }
+        g.drawString(gameOver ? "Game Over: " + score : String.valueOf(score), 10, 35);
     }
 
     public void move() {
         velocityY += gravity;
         dinosaur.y += velocityY;
 
-        if (dinosaur.y > dinosaurY) { //stop the dinosaur from falling past the ground
+        if (dinosaur.y > dinosaurY) {
             dinosaur.y = dinosaurY;
             velocityY = 0;
             dinosaur.img = dinosaurImg;
         }
 
-        for (int i = 0; i < cactusArray.size(); i++) {
-            Block cactus = cactusArray.get(i);
+        for (Block cactus : cactusArray) {
             cactus.x += velocityX;
 
             if (collision(dinosaur, cactus)) {
